@@ -4,15 +4,7 @@ from main import BooksCollector
 
 from test_data import BOOKS_DATA
 
-# Создаем список пар для тестирования. 
-# Берем из наших общих данных.
-
-BOOK_PAIRS = [
-    (BOOKS_DATA[0]['name'], BOOKS_DATA[1]['name']),       # Пара 1: Книга 1 и Книга 2
-    (BOOKS_DATA[0]['name'], BOOKS_DATA[-1]['name']),      # Пара 2: Первая и Последняя
-    (BOOKS_DATA[2]['name'], BOOKS_DATA[3]['name']),       # Пара 3: Книги из середины
-]
-
+from test_data import FAVORITE_LIST_SCENARIOS
 
 # проверка добавления новой книги
 def test_add_new_book_add_one_book(collector):
@@ -54,18 +46,18 @@ def test_get_book_genre_returns_right_genre(collector_with_books):
 def test_get_books_with_specific_genre(collector_with_books):
     target_genre = 'Фантастика'
     
-    # Считаем, сколько книг этого жанра должно быть согласно нашим данным
-    expected_books_count = sum(1 for book in BOOKS_DATA if book['genre'] == target_genre)
-    # Получаем список книг из коллектора
+    # В наших данных 2 книги этого жанра.
+    # Это и есть наш "ожидаемый результат".
+    expected_books_count = 2 
+    
     books = collector_with_books.get_books_with_specific_genre(target_genre)
     
     # Проверяем количество
     assert len(books) == expected_books_count
     
-    # Проверяем, что все ожидаемые книги действительно есть в результате
-    for book in BOOKS_DATA:
-        if book['genre'] == target_genre:
-            assert book['name'] in books 
+    # Проверяем наличие конкретных книг
+    assert 'Марсианин' in books
+    assert 'Мстители' in books 
 
 
 # проверка получения словаря
@@ -119,41 +111,38 @@ def test_add_book_in_favorites_adds_book(collector):
 
 # проверка удаления книги из Избранного
 def test_delete_book_from_favorites(collector):
-    # Берем имя книги из общих данных
     book_name = BOOKS_DATA[0]['name']
     
-    # Добавляем книгу в коллекцию
+    # Подготовка: книга должна быть в избранном, чтобы её можно было удалить
     collector.add_new_book(book_name)
-    
-    # Добавляем книгу в избранное
     collector.add_book_in_favorites(book_name)
     
-    # Проверяем, что книга действительно есть в избранном ДО удаления
-    assert book_name in collector.get_list_of_favorites_books()
-    
-    # Удаляем книгу из избранного
+    # Удаляем книгу
     collector.delete_book_from_favorites(book_name)
     
-    # Проверяем, что книги больше нет в избранном ПОСЛЕ удаления
+    # Проверка: книги нет
     assert book_name not in collector.get_list_of_favorites_books()
     assert collector.get_list_of_favorites_books() == [] 
 
 
 
 # проверка получения списка всех Избранных книг
-@pytest.mark.parametrize('book1_name, book2_name', BOOK_PAIRS)
+@pytest.mark.parametrize('scenario', FAVORITE_LIST_SCENARIOS)
+def test_get_list_of_favorites_books_returns_correct_list(collector, scenario):
+    
+    # Проверяет, что метод get_list_of_favorites_books() возвращает 
+    # корректный список в зависимости от валидности имени книги.
+    
+    book_name = scenario['input_name']
+    expected_list = scenario['expected_result']
 
-def test_get_list_of_favorites_books_returns_correct_list(collector, book1_name, book2_name):
-    # Добавляем книги в коллектор
-    collector.add_new_book(book1_name)
-    collector.add_new_book(book2_name)
-    
-    # Добавляем в избранное
-    collector.add_book_in_favorites(book1_name)
-    collector.add_book_in_favorites(book2_name)
-    
+    # Пытаемся добавить книгу в избранное
+    # (Метод add_new_book сам проверит длину имени внутри себя)
+    collector.add_new_book(book_name)
+    collector.add_book_in_favorites(book_name)
+
     # Получаем список избранного
     favorites = collector.get_list_of_favorites_books()
-    
-    # Проверяем, что список совпадает с ожидаемым порядком добавления
-    assert favorites == [book1_name, book2_name] 
+
+    # Сравниваем полученный список с ожидаемым
+    assert favorites == expected_list

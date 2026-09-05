@@ -10,8 +10,7 @@ def collector():
 
 # фикстура с несколькими книгами и жанрами
 @pytest.fixture
-def collector_with_books():
-    collector = BooksCollector()
+def collector_with_books(collector):
     
     # добавляем все книги
     for book in BOOKS_DATA:
